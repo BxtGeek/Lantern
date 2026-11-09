@@ -2,7 +2,7 @@
 
 **A minimal, macOS-style start page for your homelab.** Add your services as app-icon tiles, keep your bookmarks, search the web, check the weather and air quality, and pick a wallpaper. It is a tiny self-hosted app with no database and no npm dependencies. It runs in one small container.
 
-![Lantern](docs/Screenshot 2026-11-09 at 07-27-15 Start.png)
+![Lantern](docs/Screenshot.png)
 
 ## Features
 
