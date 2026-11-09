@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lantern</title>
+<style>
+  @font-face { font-family: "JetBrainsMono Nerd Font"; src: url("fonts/JetBrainsMonoNerdFont-Regular.woff2") format("woff2"); font-weight: 100 599; font-display: swap; }
+  @font-face { font-family: "JetBrainsMono Nerd Font"; src: url("fonts/JetBrainsMonoNerdFont-Bold.woff2") format("woff2"); font-weight: 600 900; font-display: swap; }
+  :root {
+    --font: "JetBrainsMono Nerd Font", "JetBrainsMono NF", "MesloLGS NF", "Hack Nerd Font", ui-monospace, "SF Mono", Menlo, monospace;
+    --glass: rgba(255,255,255,.14);
+    --glass-strong: rgba(30,30,34,.55);
+    --stroke: rgba(255,255,255,.22);
+    --text: #fff;
+    --text-dim: rgba(255,255,255,.7);
+    --accent: #0a84ff;
+    --danger: #ff453a;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body {
+    font-family: var(--font);
+    color: var(--text);
+    background: #1c1c1e;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* Wallpaper: two layers for a crossfade when it changes */
+  .wp { position: fixed; inset: 0; background-size: cover; background-position: center; opacity: 0; transition: opacity .8s ease; z-index: -2; }
+  .wp.on { opacity: 1; }
+  .wp-default { background: #1c1c3a; opacity: 1; z-index: -3; }
+  .scrim { position: fixed; inset: 0; background: linear-gradient(rgba(0,0,0,.18), rgba(0,0,0,.32)); z-index: -1; }
+
+  main { max-width: 980px; margin: 0 auto; padding: 9vh 24px 120px; display: flex; flex-direction: column; align-items: center; gap: 44px; }
+
+  .clock { text-align: center; text-shadow: 0 1px 24px rgba(0,0,0,.25); }
+  .clock .time { font-size: clamp(56px, 9vw, 92px); font-weight: 400; letter-spacing: -.06em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .clock .date { margin-top: 12px; font-size: 16px; font-weight: 500; color: var(--text-dim); }
+
+  /* Search */
+  .search { width: 100%; max-width: 560px; position: relative; }
+  .search input {
+    width: 100%; height: 46px; padding: 0 18px 0 64px; border-radius: 12px;
+    border: 1px solid var(--stroke); background: var(--glass);
+    backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%);
+    color: var(--text); font: 400 17px var(--font); outline: none;
+    box-shadow: 0 8px 30px rgba(0,0,0,.18);
+    transition: background .2s, box-shadow .2s;
+  }
+  .search input::placeholder { color: var(--text-dim); }
+  .search input:focus { background: rgba(255,255,255,.22); box-shadow: 0 0 0 3px rgba(10,132,255,.55), 0 8px 30px rgba(0,0,0,.2); }
+  .search .eng { position: absolute; left: 6px; top: 6px; height: 34px; min-width: 34px; padding: 0 8px; border: 0; border-radius: 8px; background: none; color: var(--text-dim); font: 500 16px var(--font); cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .search .eng:hover, .search .eng[aria-expanded="true"] { background: rgba(255,255,255,.16); color: #fff; }
+  .search .eng:focus-visible { outline: 2px solid var(--accent); }
+  .menu { position: absolute; top: 52px; left: 0; z-index: 5; min-width: 200px; padding: 5px; border-radius: 10px; border: 1px solid var(--stroke); background: rgba(40,40,46,.82); backdrop-filter: blur(30px) saturate(170%); -webkit-backdrop-filter: blur(30px) saturate(170%); box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+  .menu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 7px 10px; border: 0; border-radius: 6px; background: none; color: #fff; font: 400 13px var(--font); text-align: left; cursor: pointer; }
+  .menu button:hover, .menu button:focus-visible { background: var(--accent); outline: none; }
+  .menu .ck { width: 14px; opacity: 0; } .menu button.on .ck { opacity: 1; }
+
+  /* Sections */
+  section { width: 100%; }
+  .sec-head { display: flex; align-items: center; justify-content: space-between; margin: 0 4px 14px; }
+  .sec-head h2 { font-size: 13px; font-weight: 600; color: var(--text-dim); letter-spacing: .01em; }
+  .link-btn { background: none; border: 0; color: var(--text-dim); font: 500 13px var(--font); cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+  .link-btn:hover { color: #fff; background: rgba(255,255,255,.12); }
+
+  /* Services: app-icon grid */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 22px 12px; }
+  .tile { display: flex; flex-direction: column; align-items: center; gap: 8px; text-decoration: none; color: var(--text); cursor: pointer; background: none; border: 0; font: inherit; position: relative; padding: 4px; border-radius: 14px; }
+  .tile:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .icon {
+    width: 64px; height: 64px; border-radius: 15px; display: grid; place-items: center;
+    font-size: 28px; font-weight: 600; color: #fff; overflow: hidden;
+    box-shadow: 0 6px 16px rgba(0,0,0,.28), inset 0 0 0 1px rgba(255,255,255,.18);
+    transition: transform .15s ease;
+  }
+  .tile:hover .icon { transform: scale(1.06); }
+  .tile:active .icon { transform: scale(.96); }
+  .icon img { width: 100%; height: 100%; object-fit: contain; background: rgba(255,255,255,.92); padding: 12px; }
+  .label { font-size: 12px; max-width: 92px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 6px rgba(0,0,0,.45); }
+  .tile.add .icon { background: var(--glass); border: 1.5px dashed rgba(255,255,255,.45); box-shadow: none; font-weight: 300; font-size: 32px; backdrop-filter: blur(20px); }
+
+  .editing .tile .icon { animation: wiggle .28s ease-in-out infinite alternate; }
+  .editing .tile.add { display: none; }
+  @keyframes wiggle { from { transform: rotate(-1.6deg); } to { transform: rotate(1.6deg); } }
+  @media (prefers-reduced-motion: reduce) { .editing .tile .icon { animation: none; outline: 2px dashed rgba(255,255,255,.5); } .wp { transition: none; } }
+
+  /* Bookmarks: a glass window with traffic lights */
+  .window {
+    border-radius: 14px; border: 1px solid var(--stroke); background: var(--glass-strong);
+    backdrop-filter: blur(30px) saturate(170%); -webkit-backdrop-filter: blur(30px) saturate(170%);
+    box-shadow: 0 20px 50px rgba(0,0,0,.3); overflow: hidden;
+  }
+  .titlebar { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,.1); }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; } .dot.y { background: #febc2e; } .dot.g { background: #28c840; }
+  .titlebar span.t { margin: 0 auto; transform: translateX(-26px); font-size: 13px; font-weight: 600; color: var(--text-dim); }
+  .list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); padding: 8px; gap: 2px; }
+  .row { display: flex; align-items: center; gap: 12px; padding: 9px 10px; border-radius: 8px; color: var(--text); text-decoration: none; cursor: pointer; background: none; border: 0; font: inherit; text-align: left; width: 100%; }
+  .row:hover, .row:focus-visible { background: var(--accent); outline: none; }
+  .row .fav { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; background: rgba(255,255,255,.14); font-size: 12px; font-weight: 600; overflow: hidden; flex: none; }
+  .row .fav img { width: 16px; height: 16px; }
+  .row .name { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .host { font-size: 12px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-left: auto; }
+  .row:hover .host { color: rgba(255,255,255,.85); }
+  .empty { padding: 22px; text-align: center; color: var(--text-dim); font-size: 14px; grid-column: 1 / -1; }
+
+  /* Dock-style toolbar */
+  .dock { position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; padding: 6px; border-radius: 16px; border: 1px solid var(--stroke); background: var(--glass); backdrop-filter: blur(30px) saturate(170%); -webkit-backdrop-filter: blur(30px) saturate(170%); box-shadow: 0 10px 40px rgba(0,0,0,.3); }
+  .dock button { width: 40px; height: 40px; border: 0; border-radius: 10px; background: none; color: #fff; cursor: pointer; display: grid; place-items: center; }
+  .dock button:hover { background: rgba(255,255,255,.18); }
+  .dock button:focus-visible { outline: 2px solid var(--accent); }
+  .dock svg { width: 20px; height: 20px; }
+  .credit { position: fixed; right: 14px; bottom: 12px; font-size: 11px; color: rgba(255,255,255,.65); text-decoration: none; text-shadow: 0 1px 4px rgba(0,0,0,.5); }
+  .credit:hover { color: #fff; }
+
+  /* Dialogs (macOS sheet) */
+  dialog { border: 1px solid var(--stroke); border-radius: 14px; padding: 0; width: min(400px, calc(100vw - 32px)); color: #fff; background: rgba(40,40,46,.78); backdrop-filter: blur(40px) saturate(180%); -webkit-backdrop-filter: blur(40px) saturate(180%); box-shadow: 0 30px 80px rgba(0,0,0,.5); margin: auto; max-height: calc(100vh - 32px); overflow-y: auto; }
+  dialog::backdrop { background: rgba(0,0,0,.35); }
+  dialog form { padding: 22px; display: flex; flex-direction: column; gap: 14px; }
+  dialog h3 { font-size: 15px; font-weight: 600; text-align: center; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; color: var(--text-dim); }
+  .field input, .field select { height: 34px; border-radius: 8px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.1); color: #fff; padding: 0 10px; font: 400 14px var(--font); outline: none; }
+  .field select option { color: #000; }
+  .field input:focus, .field select:focus { box-shadow: 0 0 0 3px rgba(10,132,255,.55); border-color: transparent; }
+  .hint { font-size: 12px; color: var(--text-dim); line-height: 1.4; }
+  .hint a { color: #64b5ff; }
+  .actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+  .actions .spacer { margin-right: auto; }
+  .btn { height: 32px; padding: 0 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,.2); background: rgba(255,255,255,.12); color: #fff; font: 500 14px var(--font); cursor: pointer; }
+  .btn:hover { background: rgba(255,255,255,.2); }
+  .btn.primary { background: var(--accent); border-color: transparent; }
+  .btn.primary:hover { filter: brightness(1.1); }
+  .btn.danger { color: var(--danger); }
+  .status { font-size: 12px; min-height: 16px; color: var(--text-dim); }
+  .status.err { color: #ff8a80; }
+  .close { position: absolute; top: 14px; left: 14px; width: 12px; height: 12px; padding: 0; border: 0; border-radius: 50%; background: #ff5f57; cursor: pointer; }
+  .close:hover { filter: brightness(1.15); }
+  .close:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .wpgrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .wpt { padding: 0; border: 2px solid transparent; border-radius: 9px; overflow: hidden; cursor: pointer; background: none; aspect-ratio: 16/9; display: block; }
+  .wpt img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .wpt.on { border-color: #fff; }
+  .wpt:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .wpitem { position: relative; }
+  .wpa { position: absolute; top: 4px; width: 22px; height: 22px; border-radius: 6px; border: 0; background: rgba(0,0,0,.62); color: #fff; font: 600 13px var(--font); display: none; place-items: center; cursor: pointer; text-decoration: none; }
+  .wpitem:hover .wpa, .wpitem:focus-within .wpa { display: grid; }
+  .wpa.dl { right: 30px; } .wpa.x { right: 4px; } .wpa:hover { background: var(--accent); } .wpa.x:hover { background: var(--danger); }
+  .icongrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; max-height: 172px; overflow-y: auto; padding: 2px; }
+  .ic { aspect-ratio: 1; border: 2px solid transparent; border-radius: 9px; background: rgba(255,255,255,.1); cursor: pointer; display: grid; place-items: center; padding: 5px; font-size: 20px; color: #fff; }
+  .ic img { width: 100%; height: 100%; object-fit: contain; }
+  .ic:hover { background: rgba(255,255,255,.2); } .ic.on { border-color: #fff; }
+  .ic:focus-visible { outline: 2px solid var(--accent); }
+  .iconrow { display: flex; gap: 12px; align-items: center; }
+  .iconrow .icon { width: 48px; height: 48px; font-size: 22px; border-radius: 12px; flex: none; }
+  .row2 { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; cursor: pointer; }
+  .row2 input[type=checkbox] { appearance: none; -webkit-appearance: none; width: 38px; height: 22px; border-radius: 11px; background: rgba(255,255,255,.22); position: relative; cursor: pointer; transition: background .2s; flex: none; border: 0; padding: 0; margin: 0; }
+  .row2 input[type=checkbox]::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; transition: transform .2s; box-shadow: 0 1px 3px rgba(0,0,0,.3); }
+  .row2 input[type=checkbox]:checked { background: #30d158; }
+  .row2 input[type=checkbox]:checked::after { transform: translateX(16px); }
+  .row2 input[type=checkbox]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .col { display: flex; flex-direction: column; gap: 12px; }
+  .wx { position: relative; margin-top: -28px; text-align: center; }
+  .clock[hidden] + .wx { margin-top: 0; }
+  .wx.corner { position: fixed; top: 18px; right: 20px; margin: 0; z-index: 4; }
+  .wxbtn { display: inline-flex; align-items: center; gap: 8px; height: 34px; padding: 0 14px; border-radius: 17px; border: 1px solid var(--stroke); background: var(--glass); backdrop-filter: blur(24px) saturate(160%); -webkit-backdrop-filter: blur(24px) saturate(160%); color: #fff; font: 500 13px var(--font); cursor: pointer; max-width: 92vw; }
+  .wxbtn:hover { background: rgba(255,255,255,.22); } .wxbtn:focus-visible { outline: 2px solid var(--accent); } .wxbtn svg { flex: none; }
+  .dim { color: var(--text-dim); }
+  .wxpop { top: 42px; left: 50%; transform: translateX(-50%); width: 300px; min-width: 0; padding: 16px; text-align: left; }
+  .wx.corner .wxpop { left: auto; right: 0; transform: none; }
+  .wxhead { display: flex; align-items: center; gap: 14px; margin-bottom: 10px; } .wxt { font-size: 30px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+  .wxrow { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; color: var(--text-dim); } .wxrow b { color: #fff; font-weight: 500; }
+  .wxdays { display: grid; gap: 2px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.12); }
+  .wxd { display: grid; grid-template-columns: 56px 22px 1fr; align-items: center; gap: 8px; font-size: 13px; padding: 3px 0; } .wxd span:last-child { text-align: right; }
+  .wxsrc { margin-top: 10px; font-size: 11px; } .wxsrc a { color: #64b5ff; }
+  .dotc { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; vertical-align: middle; }
+  .nourls .host { display: none; }
+  .group { font-size: 12px; font-weight: 700; color: var(--text-dim); margin-top: 4px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,.12); }
+  .group:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+  .swatches { display: flex; flex-wrap: wrap; gap: 10px; }
+  .sw { width: 34px; height: 34px; border-radius: 50%; border: 2px solid transparent; box-shadow: inset 0 0 0 1px rgba(255,255,255,.25); cursor: pointer; padding: 0; }
+  .sw.on { border-color: #fff; }
+  .sw:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .colors { display: flex; gap: 12px; align-items: center; }
+  .colors input[type=color] { width: 44px; height: 30px; padding: 0; border: 1px solid rgba(255,255,255,.25); border-radius: 6px; background: none; cursor: pointer; }
+  .seg { display: flex; background: rgba(255,255,255,.1); border-radius: 8px; padding: 2px; }
+  .seg button { flex: 1; height: 28px; border: 0; border-radius: 6px; background: none; color: var(--text-dim); font: 500 13px var(--font); cursor: pointer; }
+  .seg button.on { background: rgba(255,255,255,.22); color: #fff; }
+</style>
+</head>
+<body>
+<div class="wp wp-default"></div>
+<div class="wp" id="wpA"></div>
+<div class="wp" id="wpB"></div>
+<div class="scrim"></div>
+
+<main id="app">
+  <div class="clock">
+    <div class="time" id="time"></div>
+    <div class="date" id="date"></div>
+  </div>
+
+  <div class="wx" id="wx" hidden><button type="button" class="wxbtn" id="wxBtn" aria-expanded="false" aria-haspopup="true"></button><div class="menu wxpop" id="wxPop" hidden></div></div>
+
+  <form class="search" id="searchForm" autocomplete="off">
+    <button type="button" class="eng" id="engBtn" aria-haspopup="menu" aria-expanded="false" title="Search engine"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8.5" cy="8.5" r="5.5"/><path d="M13 13l4 4"/></svg><svg width="10" height="10" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7l6 6 6-6"/></svg></button>
+    <div class="menu" id="engMenu" role="menu" hidden></div>
+    <input id="q" type="search" placeholder="Search" aria-label="Search" autofocus>
+  </form>
+
+  <section id="secServices">
+    <div class="sec-head"><h2>Services</h2><button class="link-btn" id="editBtn">Edit</button></div>
+    <div class="grid" id="services"></div>
+  </section>
+
+  <section id="secBookmarks">
+    <div class="sec-head"><h2>Bookmarks</h2><button class="link-btn" id="addBookmark">Add bookmark</button></div>
+    <div class="window">
+      <div class="titlebar"><i class="dot r"></i><i class="dot y"></i><i class="dot g"></i><span class="t">Bookmarks</span></div>
+      <div class="list" id="bookmarks"></div>
+    </div>
+  </section>
+</main>
+
+<nav class="dock" aria-label="Tools">
+  <button id="newWp" title="New wallpaper" aria-label="New wallpaper"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="3.5" width="15" height="13" rx="2.5"/><circle cx="7" cy="8" r="1.4"/><path d="M3 15l4.5-4.5L11 14l2.5-2.5L17 15"/></svg></button>
+  <button id="settingsBtn" title="Settings" aria-label="Settings"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 6h9M15 6h2M3 14h2M8 14h9"/><circle cx="13.5" cy="6" r="1.8"/><circle cx="6.5" cy="14" r="1.8"/></svg></button>
+</nav>
+<a class="credit" id="credit" target="_blank" rel="noopener" hidden></a>
+
+<!-- Add / edit sheet -->
+<dialog id="itemDlg">
+  <form method="dialog" id="itemForm">
+    <h3 id="itemTitle">New service</h3>
+    <div class="field"><label for="fName">Name</label><input id="fName" required placeholder="Jellyfin"></div>
+    <div class="field"><label for="fUrl">URL</label><input id="fUrl" required placeholder="http://192.168.1.10:8096" inputmode="url"></div>
+    <div class="field" id="iconField"><label>Icon</label>
+      <div class="iconrow"><div id="iconPrev"></div>
+        <div class="seg" id="iconMode" style="flex:1"><button type="button" data-m="auto">Auto</button><button type="button" data-m="lib">Library</button><button type="button" data-m="emoji">Emoji</button><button type="button" data-m="url">Custom</button></div></div>
+      <div id="pane-lib" hidden><input id="iconSearch" placeholder="Search icons (jellyfin, grafana, github…)" autocomplete="off" style="margin-bottom:6px"><div class="icongrid" id="iconGrid"></div></div>
+      <div id="pane-emoji" hidden><div class="icongrid" id="emojiGrid"></div></div>
+      <div id="pane-url" hidden><input id="fIcon" placeholder="Image URL, emoji or Nerd Font glyph" autocomplete="off"></div>
+      <span class="hint">Auto uses the site's favicon, or a coloured letter if there isn't one.</span></div>
+    <div class="actions">
+      <button type="button" class="btn danger spacer" id="fDelete" hidden>Delete</button>
+      <button type="button" class="btn" id="fCancel">Cancel</button>
+      <button type="submit" class="btn primary">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Settings sheet -->
+<dialog id="setDlg">
+  <form method="dialog" id="setForm">
+    <button type="button" class="close" id="sClose" aria-label="Close settings" title="Close"></button>
+    <h3>Settings</h3>
+
+    <div class="group">Appearance</div>
+    <div class="swatches" id="swatches" role="radiogroup" aria-label="Gradient"></div>
+    <div class="colors" id="customColors" hidden>
+      <input type="color" id="gA" aria-label="First colour"><input type="color" id="gB" aria-label="Second colour">
+    </div>
+    <span class="hint">The gradient shows whenever no wallpaper is set.</span>
+    <div class="field"><label for="fSel">Font</label><select id="fSel"></select></div>
+    <div class="field" id="fCustomF" hidden><label for="fCustom">Font name</label><input id="fCustom" placeholder="MesloLGS NF" autocomplete="off"><span class="hint">Use the name of a font installed on this device, for example “FiraCode Nerd Font”.</span></div>
+
+    <div class="group">Clock</div>
+    <label class="row2"><span>Show clock</span><input type="checkbox" id="cShow"></label>
+    <label class="row2"><span>24-hour time</span><input type="checkbox" id="c24"></label>
+    <label class="row2"><span>Show seconds</span><input type="checkbox" id="cSec"></label>
+    <label class="row2"><span>Show date</span><input type="checkbox" id="cDate"></label>
+
+    <div class="group">Weather</div>
+    <label class="row2"><span>Show weather</span><input type="checkbox" id="wEnable"></label>
+    <div class="col" id="wBox" hidden>
+      <div class="field"><label for="wQ">Location</label><div style="display:flex;gap:6px"><input id="wQ" placeholder="Search a city" autocomplete="off" style="flex:1;min-width:0"><button type="button" class="btn" id="wFind">Find</button></div></div>
+      <div class="menu" id="wResults" hidden style="position:static;min-width:0"></div>
+      <span class="hint" id="wMsg"></span>
+      <label class="row2"><span>Show air quality (AQI)</span><input type="checkbox" id="wAqi"></label>
+      <div class="field"><label for="wScale">AQI scale</label><select id="wScale"><option value="us">US AQI</option><option value="eu">European AQI</option></select></div>
+      <span class="hint">This source offers the US and European scales only, not India's own AQI. US AQI is the closest common match.</span>
+      <div class="field"><label for="wUnits">Units</label><select id="wUnits"><option value="metric">°C, km/h</option><option value="imperial">°F, mph</option></select></div>
+      <div class="field"><label for="wPos">Position</label><select id="wPos"><option value="below">Under the clock</option><option value="corner">Top right corner</option></select></div>
+      <span class="hint">Weather and air quality data by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo.com</a>. No API key needed. Your server fetches it and caches it for 10 minutes.</span>
+    </div>
+
+    <div class="group">Layout</div>
+    <label class="row2"><span>Show services</span><input type="checkbox" id="lServ"></label>
+    <label class="row2"><span>Show bookmarks</span><input type="checkbox" id="lBm"></label>
+    <label class="row2"><span>Show bookmark URLs</span><input type="checkbox" id="lUrls"></label>
+
+    <div class="group">Search</div>
+    <label class="row2"><span>Show search bar</span><input type="checkbox" id="sbShow"></label>
+    <label class="row2"><span>Open results in a new tab</span><input type="checkbox" id="sbTab"></label>
+    <div class="field"><label for="eSel">Search engine</label><select id="eSel"></select></div>
+    <div class="field" id="eCustomF" hidden><label for="eCustom">Custom URL</label><input id="eCustom" placeholder="https://search.example.com/?q=%s" inputmode="url"><span class="hint">Use %s where the search terms go, for example your own SearXNG address.</span></div>
+
+    <div class="group">Backup</div>
+    <div class="actions" style="justify-content:flex-start;margin:0"><button type="button" class="btn" id="bExport">Export</button><button type="button" class="btn" id="bImport">Import</button><input type="file" id="bFile" accept="application/json,.json" hidden></div>
+    <span class="hint">Saves your services, bookmarks and settings to a file (API keys are left out).</span>
+
+    <div class="group">Wallpaper</div>
+    <div class="field"><label for="sSource">Source</label>
+      <select id="sSource"><option value="builtin">Built-in wallpapers</option><option value="mine">My uploads</option><option value="none">None (use gradient)</option><option value="pexels">Pexels</option><option value="unsplash">Unsplash</option></select>
+    </div>
+    <div class="field" id="wpGridF"><label>Pick a wallpaper</label><div class="wpgrid" id="wpGrid"></div></div>
+    <div class="field" id="mineF"><label>My wallpapers</label><div class="wpgrid" id="mineGrid"></div>
+      <div class="actions" style="justify-content:flex-start;margin-top:6px"><button type="button" class="btn" id="upBtn">Upload image…</button><input type="file" id="upFile" accept="image/*" hidden></div>
+      <span class="hint">Up to 10 images. They are resized to 2560 px wide and stored on the server.</span></div>
+    <div class="field" id="sQueryF"><label for="sQuery">Search term</label><input id="sQuery" placeholder="minimal landscape"></div>
+    <div class="field" id="sPexelsF"><label for="sPexels">Pexels API key</label><input id="sPexels" type="password" autocomplete="off"><span class="hint">Free at <a href="https://www.pexels.com/api/" target="_blank" rel="noopener">pexels.com/api</a></span></div>
+    <div class="field" id="sUnsplashF"><label for="sUnsplash">Unsplash access key</label><input id="sUnsplash" type="password" autocomplete="off"><span class="hint">Create an app at <a href="https://unsplash.com/developers" target="_blank" rel="noopener">unsplash.com/developers</a></span></div>
+    <div class="field" id="recentF"><label>Recent wallpapers</label><div class="wpgrid" id="recentGrid"></div><span class="hint">Click one to use it again, or ↓ to download it. Only the latest few are kept.</span></div>
+    <div class="status" id="sStatus"></div>
+    <div class="actions">
+      <button type="button" class="btn spacer" id="sFetch">Fetch wallpaper</button>
+      <button type="button" class="btn primary" id="sDone">Done</button>
+    </div>
+  </form>
+</dialog>
+
+<script src="api.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

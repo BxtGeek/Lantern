@@ -1,0 +1,18 @@
+# Docker. Run: docker compose up -d --build   then open http://localhost:3000
+services:
+  lantern:
+    build: .
+    image: lantern:latest
+    container_name: lantern
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - lantern-data:/data
+    # environment:               # optional: set API keys here instead of in Settings
+    #   PEXELS_API_KEY: your-key
+    #   UNSPLASH_ACCESS_KEY: your-key
+    #   WALLPAPER_HISTORY: "8"
+
+volumes:
+  lantern-data:

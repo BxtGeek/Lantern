@@ -1,0 +1,9 @@
+{
+  "name": "lantern",
+  "version": "1.0.0",
+  "description": "A minimal, macOS-style start page for your homelab: service tiles, bookmarks, search, weather and wallpapers.",
+  "private": true,
+  "license": "MIT",
+  "engines": { "node": ">=18" },
+  "scripts": { "start": "node server.js" }
+}

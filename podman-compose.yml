@@ -1,0 +1,12 @@
+# Podman (rootless). Run: mkdir -p data && podman compose -f podman-compose.yml up -d --build
+# ":Z" relabels the folder for SELinux and ":U" gives the container's user ownership of it.
+services:
+  lantern:
+    build: .
+    image: localhost/lantern:latest
+    container_name: lantern
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data:Z,U

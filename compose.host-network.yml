@@ -1,0 +1,18 @@
+# For hosts where container networking is unavailable (for example an LXC container
+# without /dev/net/tun, where Podman fails with a "pasta" error), or when you want port 80.
+# The container shares the host network and runs as root so it can bind port 80.
+#   mkdir -p data && podman compose -f compose.host-network.yml up -d --build
+services:
+  lantern:
+    build:
+      context: .
+      network: none          # the image build needs no internet access
+    image: localhost/lantern:latest
+    container_name: lantern
+    restart: unless-stopped
+    network_mode: host
+    user: root
+    environment:
+      PORT: "80"
+    volumes:
+      - ./data:/data
