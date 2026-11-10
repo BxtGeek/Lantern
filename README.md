@@ -1,4 +1,4 @@
-# 🏮Lantern
+# 🏮 Lantern
 
 **A minimal, macOS-style start page for your homelab.** Add your services as app-icon tiles, keep your bookmarks, search the web, check the weather and air quality, and pick a wallpaper. It is a tiny self-hosted app with no database and no npm dependencies. It runs in one small container.
 
