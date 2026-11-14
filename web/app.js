@@ -16,7 +16,7 @@ async function load() {
 let saveTimer;
 function save() {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => Promise.resolve(API.save(data)).catch(() => {}), 150);
+  saveTimer = setTimeout(() => Promise.resolve(API.save(data)).catch(() => { }), 150);
 }
 
 /* ---------- clock ---------- */
@@ -32,13 +32,13 @@ function startTick() { clearInterval(tickTimer); tick(); tickTimer = setInterval
 /* ---------- search ---------- */
 const ENGINES = {
   duckduckgo: { name: 'DuckDuckGo', url: 'https://duckduckgo.com/?q=%s' },
-  google:     { name: 'Google',     url: 'https://www.google.com/search?q=%s' },
-  brave:      { name: 'Brave',      url: 'https://search.brave.com/search?q=%s' },
-  startpage:  { name: 'Startpage',  url: 'https://www.startpage.com/do/search?q=%s' },
-  kagi:       { name: 'Kagi',       url: 'https://kagi.com/search?q=%s' },
-  ecosia:     { name: 'Ecosia',     url: 'https://www.ecosia.org/search?q=%s' },
-  bing:       { name: 'Bing',       url: 'https://www.bing.com/search?q=%s' },
-  custom:     { name: 'Custom',     url: '' },
+  google: { name: 'Google', url: 'https://www.google.com/search?q=%s' },
+  brave: { name: 'Brave', url: 'https://search.brave.com/search?q=%s' },
+  startpage: { name: 'Startpage', url: 'https://www.startpage.com/do/search?q=%s' },
+  kagi: { name: 'Kagi', url: 'https://kagi.com/search?q=%s' },
+  ecosia: { name: 'Ecosia', url: 'https://www.ecosia.org/search?q=%s' },
+  bing: { name: 'Bing', url: 'https://www.bing.com/search?q=%s' },
+  custom: { name: 'Custom', url: '' },
 };
 function engine() {
   const s = data.settings;
@@ -80,10 +80,10 @@ document.addEventListener('keydown', (e) => {
 /* ---------- font ---------- */
 const NERD = '"JetBrainsMono Nerd Font", "JetBrainsMono NF"';
 const FONTS = {
-  nerd:   { name: 'JetBrainsMono Nerd Font', stack: NERD + ', ui-monospace, Menlo, monospace' },
+  nerd: { name: 'JetBrainsMono Nerd Font', stack: NERD + ', ui-monospace, Menlo, monospace' },
   system: { name: 'System (SF Pro)', stack: '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", system-ui, sans-serif, ' + NERD },
-  mono:   { name: 'System monospace', stack: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace, ' + NERD },
-  serif:  { name: 'New York (serif)', stack: 'ui-serif, "New York", Georgia, serif, ' + NERD },
+  mono: { name: 'System monospace', stack: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace, ' + NERD },
+  serif: { name: 'New York (serif)', stack: 'ui-serif, "New York", Georgia, serif, ' + NERD },
   custom: { name: 'Custom…', stack: '' },
 };
 function applyFont() {
@@ -99,11 +99,11 @@ function applyFont() {
 /* ---------- gradient ---------- */
 const GRADIENTS = {
   midnight: { name: 'Midnight', base: ['#1c1c3a', '#0b1d33'], glow: ['#5e5ce6', '#0a84ff'] },
-  aurora:   { name: 'Aurora',   base: ['#0b2a2a', '#10243f'], glow: ['#30d158', '#5e5ce6'] },
-  sunset:   { name: 'Sunset',   base: ['#2b1030', '#3a1420'], glow: ['#ff9f0a', '#ff375f'] },
-  ocean:    { name: 'Ocean',    base: ['#07233a', '#05182b'], glow: ['#64d2ff', '#0a84ff'] },
-  forest:   { name: 'Forest',   base: ['#10261c', '#0b1a14'], glow: ['#34c759', '#00c7be'] },
-  rose:     { name: 'Rose',     base: ['#2a1226', '#1d1030'], glow: ['#ff6482', '#bf5af2'] },
+  aurora: { name: 'Aurora', base: ['#0b2a2a', '#10243f'], glow: ['#30d158', '#5e5ce6'] },
+  sunset: { name: 'Sunset', base: ['#2b1030', '#3a1420'], glow: ['#ff9f0a', '#ff375f'] },
+  ocean: { name: 'Ocean', base: ['#07233a', '#05182b'], glow: ['#64d2ff', '#0a84ff'] },
+  forest: { name: 'Forest', base: ['#10261c', '#0b1a14'], glow: ['#34c759', '#00c7be'] },
+  rose: { name: 'Rose', base: ['#2a1226', '#1d1030'], glow: ['#ff6482', '#bf5af2'] },
   graphite: { name: 'Graphite', base: ['#232326', '#151517'], glow: ['#636366', '#8e8e93'] },
 };
 function gradientCss(g) {
@@ -171,24 +171,73 @@ function render() {
   add.onclick = () => openItem('service');
   grid.appendChild(add);
 
-  const list = $('#bookmarks'); list.innerHTML = '';
-  if (!data.bookmarks.length) {
-    list.innerHTML = '<div class="empty">No bookmarks yet. Use “Add bookmark” to save your first one.</div>';
-  }
-  data.bookmarks.forEach((b) => {
-    const r = document.createElement(editing ? 'button' : 'a');
-    r.className = 'row';
-    if (!editing) { r.href = b.url; } else { r.onclick = () => openItem('bookmark', b); }
-    const fav = document.createElement('span'); fav.className = 'fav';
-    const bic = (b.icon || '').trim(), bsrc = iconSrc(b);
-    fav.textContent = (bic && !bsrc) ? bic : b.name.charAt(0).toUpperCase();
-    if (bsrc) { const img = new Image(); img.alt = ''; img.src = bsrc; img.onload = () => { fav.textContent = ''; fav.appendChild(img); }; }
-    const n = document.createElement('span'); n.className = 'name'; n.textContent = b.name;
-    const h = document.createElement('span'); h.className = 'host'; h.textContent = hostOf(b.url);
-    r.append(fav, n, h);
-    list.appendChild(r);
-  });
+  renderBookmarks();
 }
+
+/* ---------- bookmark categories ---------- */
+const catName = (c) => String(c || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+function categories(skipId) {
+  const seen = [];
+  for (const b of data.bookmarks) { const c = catName(b.category); if (b.id !== skipId && c && !seen.some((x) => x.toLowerCase() === c.toLowerCase())) seen.push(c); }
+  return seen;
+}
+function bmRow(b) {
+  const r = document.createElement(editing ? 'button' : 'a');
+  r.className = 'row';
+  if (!editing) { r.href = b.url; } else { r.onclick = () => openItem('bookmark', b); }
+  const fav = document.createElement('span'); fav.className = 'fav';
+  const bic = (b.icon || '').trim(), bsrc = iconSrc(b);
+  fav.textContent = (bic && !bsrc) ? bic : b.name.charAt(0).toUpperCase();
+  if (bsrc) { const img = new Image(); img.alt = ''; img.src = bsrc; img.onload = () => { fav.textContent = ''; fav.appendChild(img); }; }
+  const n = document.createElement('span'); n.className = 'name'; n.textContent = b.name;
+  const h = document.createElement('span'); h.className = 'host'; h.textContent = hostOf(b.url);
+  r.append(fav, n, h);
+  return r;
+}
+function bmGroup(g) {
+  const box = document.createElement('div'), key = g.name.toLowerCase(), collapsed = !editing && !!data.settings.collapsed[key];
+  box.className = 'catgroup' + (collapsed ? ' collapsed' : '');
+  if (g.name) {
+    const row = document.createElement('div'); row.className = 'cathrow';
+    const hb = document.createElement('button'); hb.type = 'button'; hb.className = 'cathead'; hb.setAttribute('aria-expanded', String(!collapsed));
+    hb.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7l6 6 6-6"/></svg>';
+    const t = document.createElement('span'); t.textContent = g.name; const c = document.createElement('span'); c.className = 'catcount'; c.textContent = g.items.length;
+    hb.append(t, c);
+    hb.onclick = () => { const col = data.settings.collapsed; if (col[key]) delete col[key]; else col[key] = true; save(); render(); };
+    row.appendChild(hb);
+    if (editing && !g.plain) { const rn = document.createElement('button'); rn.type = 'button'; rn.className = 'link-btn'; rn.textContent = 'Rename'; rn.onclick = () => openCat(g.name); row.appendChild(rn); }
+    box.appendChild(row);
+  }
+  const list = document.createElement('div'); list.className = 'list'; g.items.forEach((b) => list.appendChild(bmRow(b))); box.appendChild(list);
+  return box;
+}
+function renderBookmarks() {
+  const wrap = $('#bookmarks'); wrap.innerHTML = '';
+  if (!data.bookmarks.length) { wrap.innerHTML = '<div class="empty">No bookmarks yet. Use “Add bookmark” to save your first one.</div>'; return; }
+  const cats = categories(), plain = data.bookmarks.filter((b) => !catName(b.category)), groups = [];
+  if (!cats.length) groups.push({ name: '', items: plain });
+  else {
+    const gi = cats.findIndex((c) => c.toLowerCase() === 'general');
+    if (plain.length && gi < 0) groups.push({ name: 'General', items: plain, plain: true });
+    cats.forEach((c, i) => groups.push({ name: c, items: (i === gi ? plain : []).concat(data.bookmarks.filter((b) => catName(b.category).toLowerCase() === c.toLowerCase())) }));
+  }
+  groups.forEach((g) => wrap.appendChild(bmGroup(g)));
+}
+let catEditing = '';
+function openCat(name) { catEditing = name; $('#cName').value = name; $('#catDlg').showModal(); $('#cName').focus(); }
+$('#catForm').addEventListener('submit', () => {
+  const nn = catName($('#cName').value); if (!nn) return;
+  const ok = catEditing.toLowerCase(), col = data.settings.collapsed;
+  data.bookmarks.forEach((b) => { if (catName(b.category).toLowerCase() === ok) b.category = nn; });
+  if (col[ok]) { delete col[ok]; col[nn.toLowerCase()] = true; }
+  save(); render();
+});
+$('#cRemove').onclick = () => {
+  const ok = catEditing.toLowerCase();
+  data.bookmarks.forEach((b) => { if (catName(b.category).toLowerCase() === ok) b.category = ''; });
+  delete data.settings.collapsed[ok]; save(); render(); $('#catDlg').close();
+};
+$('#cCancel').onclick = () => $('#catDlg').close();
 
 $('#editBtn').onclick = () => { editing = !editing; render(); };
 
@@ -199,6 +248,9 @@ function openItem(kind, item) {
   $('#itemTitle').textContent = (item ? 'Edit ' : 'New ') + kind;
   $('#fName').value = item ? item.name : '';
   $('#fUrl').value = item ? item.url : '';
+  $('#catField').hidden = kind !== 'bookmark';
+  $('#fCat').value = item ? catName(item.category) : '';
+  $('#catList').innerHTML = categories(item && item.id).map((c) => `<option value="${esc(c)}">`).join('');
   initIconPicker(item);
   $('#fDelete').hidden = !item;
   itemDlg.showModal();
@@ -216,6 +268,7 @@ $('#itemForm').addEventListener('submit', () => {
   const item = { id: dlgId || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8)), name: $('#fName').value.trim(), url: normUrl($('#fUrl').value) };
   if (iconMode === 'url') iconValue = $('#fIcon').value.trim();
   item.icon = iconValue;
+  if (dlgKind === 'bookmark') { const c = catName($('#fCat').value); item.category = categories(dlgId).find((x) => x.toLowerCase() === c.toLowerCase()) || c; }
   const i = data[key].findIndex((x) => x.id === dlgId);
   if (i >= 0) data[key][i] = item; else data[key].push(item);
   save(); render();
@@ -255,6 +308,7 @@ function normalize() {
   S.clock = { show: true, h24: false, seconds: false, date: true, ...(S.clock || {}) };
   S.searchBar = { show: true, newTab: false, ...(S.searchBar || {}) };
   S.weather = { enabled: false, place: '', lat: null, lon: null, units: 'metric', position: 'below', aqi: true, aqiScale: 'us', ...(S.weather || {}) };
+  S.collapsed = S.collapsed && typeof S.collapsed === 'object' ? S.collapsed : {};
   S.layout = { services: true, bookmarks: true, urls: true, ...(S.layout || {}) };
   if (data.settings.source === 'builtin' && !(data.settings.wallpaper && data.settings.wallpaper.builtin)) data.settings.wallpaper = bwp(BUILTIN[0]);
 }
@@ -326,10 +380,12 @@ $('#fSel').onchange = () => { $('#fCustomF').hidden = $('#fSel').value !== 'cust
 $('#fCustom').addEventListener('input', readSettings);
 $('#sClose').onclick = () => { readSettings(); setDlg.close(); };
 $('#sDone').onclick = () => { readSettings(); setDlg.close(); };
-[setDlg, itemDlg].forEach((d) => d.addEventListener('click', (e) => { if (e.target === d) d.close(); }));
+[setDlg, itemDlg, $('#catDlg')].forEach((d) => d.addEventListener('click', (e) => { if (e.target === d) d.close(); }));
 $('#settingsBtn').onclick = openSettings;
-$('#sSource').onchange = () => { syncSettingsUI(); readSettings(); const v = $('#sSource').value; if (v === 'none') fetchWallpaper(); if (v === 'mine' && lib.uploads.length) { const c = data.settings.wallpaper && data.settings.wallpaper.lib; setLibItem(lib.uploads.find((x) => x.id === c) || lib.uploads[0]); }
-  if (v === 'builtin') setBuiltin((data.settings.wallpaper && data.settings.wallpaper.builtin) || BUILTIN[0].id); };
+$('#sSource').onchange = () => {
+  syncSettingsUI(); readSettings(); const v = $('#sSource').value; if (v === 'none') fetchWallpaper(); if (v === 'mine' && lib.uploads.length) { const c = data.settings.wallpaper && data.settings.wallpaper.lib; setLibItem(lib.uploads.find((x) => x.id === c) || lib.uploads[0]); }
+  if (v === 'builtin') setBuiltin((data.settings.wallpaper && data.settings.wallpaper.builtin) || BUILTIN[0].id);
+};
 ['#sQuery', '#sPexels', '#sUnsplash'].forEach((id) => $(id).addEventListener('change', readSettings));
 $('#sFetch').onclick = () => { readSettings(); fetchWallpaper($('#sStatus')); };
 $('#setForm').addEventListener('submit', readSettings);
@@ -338,8 +394,10 @@ $('#newWp').onclick = () => {
 };
 
 /* ---------- layout, clock and weather options ---------- */
-const BINDS = { '#cShow': 'clock.show', '#c24': 'clock.h24', '#cSec': 'clock.seconds', '#cDate': 'clock.date', '#sbShow': 'searchBar.show', '#sbTab': 'searchBar.newTab',
-  '#wEnable': 'weather.enabled', '#wUnits': 'weather.units', '#wAqi': 'weather.aqi', '#wScale': 'weather.aqiScale', '#wPos': 'weather.position', '#lServ': 'layout.services', '#lBm': 'layout.bookmarks', '#lUrls': 'layout.urls' };
+const BINDS = {
+  '#cShow': 'clock.show', '#c24': 'clock.h24', '#cSec': 'clock.seconds', '#cDate': 'clock.date', '#sbShow': 'searchBar.show', '#sbTab': 'searchBar.newTab',
+  '#wEnable': 'weather.enabled', '#wUnits': 'weather.units', '#wAqi': 'weather.aqi', '#wScale': 'weather.aqiScale', '#wPos': 'weather.position', '#lServ': 'layout.services', '#lBm': 'layout.bookmarks', '#lUrls': 'layout.urls'
+};
 const getp = (p) => p.split('.').reduce((o, k) => o[k], data.settings);
 const setp = (p, v) => { const k = p.split('.'), last = k.pop(); k.reduce((o, x) => o[x], data.settings)[last] = v; };
 function syncBinds() {
@@ -363,12 +421,14 @@ for (const [id, p] of Object.entries(BINDS)) {
 }
 
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const WX = { 0: ['Clear', 'sun'], 1: ['Mostly clear', 'sun'], 2: ['Partly cloudy', 'partly'], 3: ['Overcast', 'cloud'], 45: ['Fog', 'fog'], 48: ['Fog', 'fog'],
+const WX = {
+  0: ['Clear', 'sun'], 1: ['Mostly clear', 'sun'], 2: ['Partly cloudy', 'partly'], 3: ['Overcast', 'cloud'], 45: ['Fog', 'fog'], 48: ['Fog', 'fog'],
   51: ['Light drizzle', 'rain'], 53: ['Drizzle', 'rain'], 55: ['Heavy drizzle', 'rain'], 56: ['Freezing drizzle', 'rain'], 57: ['Freezing drizzle', 'rain'],
   61: ['Light rain', 'rain'], 63: ['Rain', 'rain'], 65: ['Heavy rain', 'rain'], 66: ['Freezing rain', 'rain'], 67: ['Freezing rain', 'rain'],
   71: ['Light snow', 'snow'], 73: ['Snow', 'snow'], 75: ['Heavy snow', 'snow'], 77: ['Snow grains', 'snow'],
   80: ['Light showers', 'rain'], 81: ['Showers', 'rain'], 82: ['Heavy showers', 'rain'], 85: ['Snow showers', 'snow'], 86: ['Snow showers', 'snow'],
-  95: ['Thunderstorm', 'storm'], 96: ['Thunderstorm, hail', 'storm'], 99: ['Thunderstorm, hail', 'storm'] };
+  95: ['Thunderstorm', 'storm'], 96: ['Thunderstorm, hail', 'storm'], 99: ['Thunderstorm, hail', 'storm']
+};
 const CLOUD = 'M7 15h10a4 4 0 0 0 .6-7.95A5.5 5.5 0 0 0 7 6.5 4.3 4.3 0 0 0 7 15z';
 const WXI = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
@@ -490,7 +550,7 @@ $('#upBtn').onclick = () => $('#upFile').click();
 $('#upFile').onchange = (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) uploadFile(f); };
 
 /* ---------- icon picker ---------- */
-const EMOJI = ['🏠','📺','🎬','🎵','📚','📷','📁','☁️','🔒','🔑','🛡️','🌐','📡','🖥️','💾','🗄️','📊','📈','⚙️','🔧','🧰','🐳','📦','🧠','🤖','📝','📓','📅','✉️','💬','🔔','🎮','🕹️','🏋️','🍳','💰','🧾','🛒','🌡️','💡','🔌','📶','🧭','🗺️','⭐','🔖','🚀','🎧'];
+const EMOJI = ['🏠', '📺', '🎬', '🎵', '📚', '📷', '📁', '☁️', '🔒', '🔑', '🛡️', '🌐', '📡', '🖥️', '💾', '🗄️', '📊', '📈', '⚙️', '🔧', '🧰', '🐳', '📦', '🧠', '🤖', '📝', '📓', '📅', '✉️', '💬', '🔔', '🎮', '🕹️', '🏋️', '🍳', '💰', '🧾', '🛒', '🌡️', '💡', '🔌', '📶', '🧭', '🗺️', '⭐', '🔖', '🚀', '🎧'];
 const prettyIcon = (n) => n.replace(/-/g, ' ');
 function updatePreview() {
   const v = iconMode === 'auto' ? '' : iconValue;

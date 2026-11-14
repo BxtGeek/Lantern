@@ -7,7 +7,7 @@
 ## Features
 
 - **Service tiles.** App-style icons for your homelab services, added and edited from the page itself. Click **Edit** and the tiles wiggle, like on iOS.
-- **Bookmarks.** A frosted-glass window of links. You can hide the URL text if you prefer a cleaner list.
+- **Bookmarks with categories.** A frosted-glass window of links. Give a bookmark a category (Work, Media, Tools...) and it is grouped under a collapsible heading. Rename or remove categories in Edit mode. You can also hide the URL text for a cleaner list.
 - **Icon picker** for services and bookmarks. Choose Auto (favicon), one of 180 bundled app logos (searchable, works offline), an emoji, or your own image URL or glyph.
 - **Search.** DuckDuckGo by default, with a switcher for Google, Brave, Startpage, Kagi, Ecosia, Bing, or your own SearXNG address. Press `/` anywhere to focus the box.
 - **Weather and air quality.** Powered by [Open-Meteo](https://open-meteo.com/), so no API key is needed. It shows current conditions, a 5-day forecast, and the US or European AQI with PM2.5 and PM10.
